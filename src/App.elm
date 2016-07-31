@@ -13,6 +13,7 @@ type alias Model = String
 
 type Action = Error LocalStorage.Error | Highlight String | Save | NoOp
 
+-- TODO next: add README
 -- TODO next: store JSON-encoded list of values
 -- TODO next: print list of stored values (replace (always NoOp) with (always Refresh) to display changed state)
 -- TODO next: add Bootstrap styles (hint: look how examples/Main.elm uses html page in fredcy/localstorage)
