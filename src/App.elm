@@ -13,6 +13,14 @@ type alias Model = String
 
 type Action = Error LocalStorage.Error | Highlight String | Save | NoOp
 
+-- TODO next: store JSON-encoded list of values
+-- TODO next: print list of stored values (replace (always NoOp) with (always Refresh) to display changed state)
+-- TODO next: add Bootstrap styles (hint: look how examples/Main.elm uses html page in fredcy/localstorage)
+-- TODO next: bind highlights to current date and store object {[date]: [highlights]}
+-- TODO next: display highlights for 3 days including today
+-- TODO next: add infinite scroll backwards
+-- TODO next: refactor out LocalStorage implementation into a module to be able to use another storing facility
+
 update : Action -> Model -> (Model, Cmd Action)
 update action model =
   case action of
