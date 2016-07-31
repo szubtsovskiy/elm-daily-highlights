@@ -2,6 +2,7 @@ module App exposing (main)
 
 import Html exposing (..)
 import Html.App as Html
+import LocalStorage
 
 main = Html.beginnerProgram {model = model, view = view, update = update}
 
