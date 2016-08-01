@@ -6,7 +6,10 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
 import LocalStorage
 import Task
-import Json.Encode
+import Json.Encode as JsonE
+import Json.Decode as JsonD
+import List
+import String
 
 main = Html.program {init = init, view = view, update = update, subscriptions = (\x -> Sub.none)}
 
@@ -15,10 +18,9 @@ type alias Model =
   , current : String
   }
 
-type Action = Error LocalStorage.Error | Highlight String | Save | NoOp
+type Action = Error LocalStorage.Error | Init (Maybe (List String)) | Highlight String | Save | NoOp
 
--- TODO next: take initial list from the local storage
--- TODO next: print list of stored values (replace (always NoOp) with (always Refresh) to display changed state)
+-- TODO next: print list of stored values
 -- TODO next: add Bootstrap styles (hint: look how examples/Main.elm uses html page in fredcy/localstorage)
 -- TODO next: bind highlights to current date and store object {[date]: [highlights]}
 -- TODO next: display highlights for 3 days including today
@@ -32,14 +34,29 @@ update action model =
   case action of
     NoOp ->
       (model, Cmd.none)
+
+    Init maybeList ->
+      let
+        items =
+          case maybeList of
+            Just list ->
+              list
+
+            Nothing ->
+              []
+      in
+        ({model | items = items}, Cmd.none)
+
     Error err ->
       let
         _ =
           Debug.log "Error: " (toString err)
       in
         (model, Cmd.none)
+
     Highlight value ->
       ({model | current = value}, Cmd.none)
+
     Save ->
       let
         new = {model | items = model.items ++ [model.current], current = ""}
@@ -60,12 +77,12 @@ view model =
 
 init : (Model, Cmd Action)
 init =
-  ({items = [], current = ""}, Cmd.none)
+  ({items = [], current = ""}, Task.perform Error Init (LocalStorage.getJson (JsonD.list JsonD.string) "highlights"))
 
 -- INTERNAL API
 
 jsonEncode : List String -> String
 jsonEncode items =
-  List.map Json.Encode.string items
-    |> Json.Encode.list
-    |> Json.Encode.encode 0
+  List.map JsonE.string items
+    |> JsonE.list
+    |> JsonE.encode 0
