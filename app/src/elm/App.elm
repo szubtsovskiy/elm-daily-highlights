@@ -42,7 +42,12 @@ type alias Model =
 
 -- UPDATE
 
-type Action = Error LocalStorage.Error | Init (Maybe (List String)) | Highlight String | Save | NoOp
+type Action
+  = NoOp
+  | Error LocalStorage.Error
+  | Init (Maybe (List String))
+  | SetCurrent String
+  | KeyDown Int
 
 update : Action -> Model -> (Model, Cmd Action)
 update action model =
@@ -69,15 +74,22 @@ update action model =
       in
         (model, Cmd.none)
 
-    Highlight value ->
+    SetCurrent value ->
       ({model | current = value}, Cmd.none)
 
-    Save ->
-      let
-        new = {model | items = model.items ++ [model.current], current = ""}
-        items = new.items
-      in
-        (new, Task.perform Error (always NoOp) (LocalStorage.set "highlights" (jsonEncode items)))
+    KeyDown code ->
+      case code of
+        13 ->
+          let
+            new = {model | items = model.items ++ [model.current], current = ""}
+            items = new.items
+          in
+            (new, Task.perform Error (always NoOp) (LocalStorage.set "highlights" (jsonEncode items)))
+        27 ->
+          ({model | current = ""}, Cmd.none)
+
+        _ ->
+          (model, Cmd.none)
 
 -- VIEW
 
@@ -89,8 +101,9 @@ view model =
   in
     div []
     [ div [ class styles.container ] paras
-    , input [ type' "text", placeholder "Highlight", onInput Highlight, value model.current ] []
+    , input [ type' "text", placeholder "Highlight", onInput SetCurrent, onKeyDown KeyDown, value model.current ] []
     ]
+
 
 para : String -> Html Action
 para content =
