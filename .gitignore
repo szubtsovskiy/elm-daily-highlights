@@ -5,3 +5,8 @@ elm-stuff/
 # elm-repl generated files
 repl-temp-*
 
+# generated files
+dist
+
+tmp
+node_modules

@@ -1,11 +1,10 @@
 {
     "version": "1.0.0",
-    "summary": "Write down daily highlights and save them in the browser's local storage",
+    "summary": "Write down daily highlights and save them to the browser's local storage",
     "repository": "https://github.com/szubtsovskiy/elm-daily-highlights.git",
     "license": "BSD3",
     "source-directories": [
-        "src",
-        "test"
+        "app/src/elm"
     ],
     "exposed-modules": [],
     "native-modules": true,
