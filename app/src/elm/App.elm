@@ -4,11 +4,11 @@ import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, on, keyCode)
+import Helpers.Api as Api
 import Helpers.LocalStorage as LocalStorage
-import Task
-import Json.Encode as JsonE
-import Json.Decode as JsonD
 import List
+import Json.Decode as Json
+import Result exposing (Result(Ok, Err))
 
 -- MAIN
 
@@ -39,14 +39,12 @@ type alias Model =
 -- TODO next: bind highlights to current date and store object {[date]: [highlights]}
 -- TODO next: display highlights for 3 days including today
 -- TODO next: add infinite scroll backwards
--- TODO next: refactor out LocalStorage implementation into a module to be able to use another storing facility (maybe two modules for saving and reading data to be able to import Json.Decode/Encode as Json)
 
 -- UPDATE
 
 type Action
   = NoOp
-  | Error LocalStorage.Error
-  | Init (Maybe (List String))
+  | ReceiveHighlights Api.Action
   | SetCurrent String
   | KeyDown Int
 
@@ -56,24 +54,15 @@ update action model =
     NoOp ->
       (model, Cmd.none)
 
-    Init maybeList ->
-      let
-        items =
-          case maybeList of
-            Just list ->
-              list
-
-            Nothing ->
-              []
-      in
-        ({model | items = items}, Cmd.none)
-
-    Error err ->
-      let
-        _ =
-          Debug.log "Error: " (toString err)
-      in
-        (model, Cmd.none)
+    ReceiveHighlights action ->
+      case Api.receive action of
+        Ok items ->
+          ({model | items = model.items ++ (List.map (.text) items)}, Cmd.none)
+        Err err ->
+          let
+            _ = Debug.log "Error: " err
+          in
+            (model, Cmd.none)
 
     SetCurrent value ->
       ({model | current = value}, Cmd.none)
@@ -85,7 +74,7 @@ update action model =
             new = {model | items = model.items ++ [model.current], current = ""}
             items = new.items
           in
-            (new, Task.perform Error (always NoOp) (LocalStorage.set "highlights" (jsonEncode items)))
+            (new, Cmd.map ReceiveHighlights (Api.save (Api.Highlight model.current)))
         27 ->
           ({model | current = ""}, Cmd.none)
 
@@ -116,7 +105,7 @@ para content =
 
 onKeyDown : (Int -> action) -> Attribute action
 onKeyDown tagger =
-  on "keydown" (JsonD.map tagger keyCode)
+  on "keydown" (Json.map tagger keyCode)
 
 --scrollTop : JsonD.Decoder Int
 --scrollTop =
@@ -126,12 +115,4 @@ onKeyDown tagger =
 
 init : Styles -> (Model, Cmd Action)
 init styles =
-  ({items = [], current = "", styles = styles}, Task.perform Error Init (LocalStorage.getJson (JsonD.list JsonD.string) "highlights"))
-
--- INTERNAL API
-
-jsonEncode : List String -> String
-jsonEncode items =
-  List.map JsonE.string items
-    |> JsonE.list
-    |> JsonE.encode 0
+  ({items = [], current = "", styles = styles}, Cmd.map ReceiveHighlights Api.fetch)
