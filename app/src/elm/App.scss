@@ -1,0 +1,26 @@
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/variables";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/mixins/vendor-prefixes";
+@import "~bootstrap-sass/assets/stylesheets/bootstrap/wells";
+
+$fa-font-path: 'font-awesome/fonts';
+@import '~font-awesome/scss/font-awesome';
+
+.container {
+  @extend .well;
+
+  height: 500px;
+  width: 100%;
+  overflow: auto;
+
+  p:nth-child(2) {
+    margin-top: 40px;
+  }
+}
+
+.loaderIconContainer {
+  height: 40px;
+}
+
+.loaderIcon {
+  @extend .fa, .fa-spinner, .fa-spin, .fa-2x;
+}

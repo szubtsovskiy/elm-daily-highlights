@@ -3,31 +3,46 @@ module App exposing (main)
 import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput, onClick)
+import Html.Events exposing (onInput, on, keyCode)
 import LocalStorage
 import Task
 import Json.Encode as JsonE
 import Json.Decode as JsonD
 import List
-import String
 
-main = Html.program {init = init, view = view, update = update, subscriptions = (\x -> Sub.none)}
+-- MAIN
+
+main : Program Styles
+main =
+  Html.programWithFlags
+    { init = init
+    , view = view
+    , update = update
+    , subscriptions = (\x -> Sub.none)
+    }
+
+-- MODEL
+
+type alias Styles =
+  { container : String
+  , loaderIconContainer : String
+  , loaderIcon : String
+  }
 
 type alias Model =
   { items : List String
   , current : String
+  , styles : Styles
   }
 
-type Action = Error LocalStorage.Error | Init (Maybe (List String)) | Highlight String | Save | NoOp
-
--- TODO next: print list of stored values
--- TODO next: add Bootstrap styles (hint: look how examples/Main.elm uses html page in fredcy/localstorage)
 -- TODO next: bind highlights to current date and store object {[date]: [highlights]}
 -- TODO next: display highlights for 3 days including today
 -- TODO next: add infinite scroll backwards
--- TODO next: refactor out LocalStorage implementation into a module to be able to use another storing facility
+-- TODO next: refactor out LocalStorage implementation into a module to be able to use another storing facility (maybe two modules for saving and reading data to be able to import Json.Decode/Encode as Json)
 
 -- UPDATE
+
+type Action = Error LocalStorage.Error | Init (Maybe (List String)) | Highlight String | Save | NoOp
 
 update : Action -> Model -> (Model, Cmd Action)
 update action model =
@@ -68,16 +83,36 @@ update action model =
 
 view : Model -> Html Action
 view model =
-  div []
-  [ input [ type' "text", placeholder "Highlight", onInput Highlight, value model.current ] []
-  , button [ type' "submit", onClick Save ] [ text "save" ]
-  ]
+  let
+    paras = List.map para model.items
+    styles = model.styles
+  in
+    div []
+    [ div [ class styles.container ] paras
+    , input [ type' "text", placeholder "Highlight", onInput Highlight, value model.current ] []
+    ]
+
+para : String -> Html Action
+para content =
+  p [] [text content]
+
+--onScroll : (Int -> action) -> Attribute action
+--onScroll tagger =
+--  on "scroll" (JsonD.map tagger scrollTop)
+
+onKeyDown : (Int -> action) -> Attribute action
+onKeyDown tagger =
+  on "keydown" (JsonD.map tagger keyCode)
+
+--scrollTop : JsonD.Decoder Int
+--scrollTop =
+--  JsonD.at [ "target", "scrollTop" ] JsonD.int
 
 -- INIT
 
-init : (Model, Cmd Action)
-init =
-  ({items = [], current = ""}, Task.perform Error Init (LocalStorage.getJson (JsonD.list JsonD.string) "highlights"))
+init : Styles -> (Model, Cmd Action)
+init styles =
+  ({items = [], current = "", styles = styles}, Task.perform Error Init (LocalStorage.getJson (JsonD.list JsonD.string) "highlights"))
 
 -- INTERNAL API
 
