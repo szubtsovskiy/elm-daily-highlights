@@ -25,6 +25,7 @@ main =
 
 type alias Styles =
   { container : String
+  , input : String
   , loaderIconContainer : String
   , loaderIcon : String
   }
@@ -101,7 +102,7 @@ view model =
   in
     div []
     [ div [ class styles.container ] paras
-    , input [ type' "text", placeholder "Highlight", onInput SetCurrent, onKeyDown KeyDown, value model.current ] []
+    , input [ type' "text", class styles.input, placeholder "Highlight", onInput SetCurrent, onKeyDown KeyDown, value model.current ] []
     ]
 
 
