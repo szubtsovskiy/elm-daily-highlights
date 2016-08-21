@@ -4,7 +4,7 @@ import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, on, keyCode)
-import LocalStorage
+import Helpers.LocalStorage as LocalStorage
 import Task
 import Json.Encode as JsonE
 import Json.Decode as JsonD

@@ -4,7 +4,8 @@
     "repository": "https://github.com/szubtsovskiy/elm-daily-highlights.git",
     "license": "BSD3",
     "source-directories": [
-        "app/src/elm"
+        "app/src/elm",
+        "app/src/elm/Helpers"
     ],
     "exposed-modules": [],
     "native-modules": true,

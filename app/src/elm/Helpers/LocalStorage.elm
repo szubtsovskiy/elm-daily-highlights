@@ -1,6 +1,6 @@
 -- Code borrowed shamelessly from https://github.com/fredcy/localstorage
 
-effect module LocalStorage
+effect module Helpers.LocalStorage
     where { subscription = MySub }
     exposing
         ( Error(..)
