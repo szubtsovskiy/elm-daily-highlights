@@ -1,15 +1,19 @@
-module Helpers.Api exposing (Highlight, Action, save, fetch, receive)
+module Helpers.Api exposing (Highlights, Action, save, fetch, receive)
+
+import Dict exposing (Dict)
 import Helpers.LocalStorage as LocalStorage
 import Json.Encode as JsonE
 import Json.Decode as JsonD
-import Task
 import Result exposing (Result(Ok, Err))
+import Task
 
 -- MODEL
 
 type alias Highlight =
   { text : String
   }
+
+type alias Highlights = Dict String (List String)
 
 -- PUBLIC API
 
@@ -20,23 +24,23 @@ type Action
   | FetchFail LocalStorage.Error
 --  | Init (Maybe (List String))
 
-receive : Action -> Result String (List Highlight)
+receive : Action -> Result String Highlights
 receive action =
   case action of
     SaveSucceed ->
-      Ok []
+      Ok Dict.empty
 
     SaveFail err ->
       Err (toString err)
 
     FetchSucceed ->
-      Ok []
+      Ok Dict.empty
 
     FetchFail err ->
       Err (toString err)
 
 
-save : Highlight -> Cmd Action
+save : String -> Cmd Action
 save h =
   Cmd.none
 
