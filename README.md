@@ -2,20 +2,38 @@
 
 Write down daily highlights and save them in the browser's local storage.
 
-### Short
+### Description
 
 This is a simple Elm application allowing to save some highlights from today,
 thoughts, results which are worth noting and other interesting stuff.
 
 First, proof-of-concept version, allows saving these in the browser's local storage.
-I plan for abstracting it out to allow saving the thoughts anywhere.
+Saving and fetching stuff is implemented as separate module to easily replace storage facility with something else.
 
-### Running
+### Requirements
 
-Start Elm reactor
+* Elm 0.17.1-0.18.0
+
+### Development
 
 ```
-$ elm reactor
+npm start
 ```
 
-and navigate to `src/App.elm`.
+Application will be accessible at http://localhost:8080. Code changes will be automatically reloaded.
+
+### Production
+
+```
+npm run build
+```
+
+Check then the `dist` folder.
+
+### Credits
+
+Peter Morawiec, for [elm-webpack-starter](https://github.com/moarwick/elm-webpack-starter).
+
+### License
+
+MIT
