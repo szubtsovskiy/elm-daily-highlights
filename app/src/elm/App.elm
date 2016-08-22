@@ -6,7 +6,6 @@ import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, on, keyCode)
 import Helpers.Api as Api
-import Helpers.LocalStorage as LocalStorage
 import Json.Decode as Json
 import List exposing (map, foldr)
 import Result exposing (Result(Ok, Err))
@@ -36,6 +35,7 @@ type alias Model =
   , current : String
   , styles : Styles
   }
+
 
 -- TODO next: bind highlights to current date and store object {[date]: [highlights]}
 -- TODO next: sort highlights by date

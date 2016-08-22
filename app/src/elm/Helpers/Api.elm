@@ -2,39 +2,40 @@ module Helpers.Api exposing (Highlights, Action, save, fetch, receive)
 
 import Dict exposing (Dict)
 import Helpers.LocalStorage as LocalStorage
-import Json.Encode as JsonE
-import Json.Decode as JsonD
+import Json.Encode as Encode
+import Json.Decode as Json
 import Result exposing (Result(Ok, Err))
 import Task
 
 -- MODEL
-
-type alias Highlight =
-  { text : String
-  }
 
 type alias Highlights = Dict String (List String)
 
 -- PUBLIC API
 
 type Action
-  = SaveSucceed
+  = SaveSucceed Highlights
   | SaveFail LocalStorage.Error
-  | FetchSucceed
+  | FetchSucceed (Maybe Highlights)
   | FetchFail LocalStorage.Error
---  | Init (Maybe (List String))
+
 
 receive : Action -> Result String Highlights
 receive action =
   case action of
-    SaveSucceed ->
-      Ok Dict.empty
+    SaveSucceed highlights ->
+      Ok highlights
 
     SaveFail err ->
       Err (toString err)
 
-    FetchSucceed ->
-      Ok Dict.empty
+    FetchSucceed maybeHighlights ->
+      case maybeHighlights of
+        Just highlights ->
+          Ok highlights
+
+        Nothing ->
+          Ok Dict.empty
 
     FetchFail err ->
       Err (toString err)
@@ -42,38 +43,31 @@ receive action =
 
 save : String -> Cmd Action
 save h =
-  Cmd.none
+  let
+    highlights = Dict.singleton "ph" [h]
+  in
+    Task.perform SaveFail (always (SaveSucceed highlights)) (LocalStorage.set "highlights" (encode highlights))
+
 
 fetch : Cmd Action
 fetch =
-  Cmd.none
+  Task.perform FetchFail FetchSucceed (LocalStorage.getJson decodeHighlights "highlights")
 
--- save: Task.perform Error (always NoOp) (LocalStorage.set "highlights" (jsonEncode items))
--- fetch: Task.perform Error Init (LocalStorage.getJson (JsonD.list JsonD.string) "highlights"
-
---    Init maybeList ->
---      let
---        items =
---          case maybeList of
---            Just list ->
---              list
---
---            Nothing ->
---              []
---      in
---        ({model | items = items}, Cmd.none)
---
---    Error err ->
---      let
---        _ =
---          Debug.log "Error: " (toString err)
---      in
---        (model, Cmd.none)
 
 -- PRIVATE API
 
-jsonEncode : List String -> String
-jsonEncode items =
-  List.map JsonE.string items
-    |> JsonE.list
-    |> JsonE.encode 0
+decodeHighlights : Json.Decoder Highlights
+decodeHighlights =
+  Json.dict (Json.list Json.string)
+
+
+encode : Highlights -> String
+encode highlights =
+  Dict.toList highlights
+    |> List.map encodeTuple
+    |> Encode.object
+    |> Encode.encode 0
+
+encodeTuple : (String, List String) -> (String, Encode.Value)
+encodeTuple (k, v) =
+  (k, Encode.list (List.map Encode.string v))
