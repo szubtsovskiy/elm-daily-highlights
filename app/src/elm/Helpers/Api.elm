@@ -5,7 +5,7 @@ import Helpers.LocalStorage as LocalStorage
 import Json.Encode as Encode
 import Json.Decode as Json
 import Result exposing (Result(Ok, Err))
-import Task
+import Task exposing (Task, andThen)
 
 -- MODEL
 
@@ -46,23 +46,37 @@ save h =
   let
     highlights = Dict.singleton "ph" [h]
   in
-    Task.perform SaveFail (always (SaveSucceed highlights)) (LocalStorage.set "highlights" (encode highlights))
+    Task.perform SaveFail (always (SaveSucceed highlights)) (mergeHighlights "ph" h)
 
 
 fetch : Cmd Action
 fetch =
-  Task.perform FetchFail FetchSucceed (LocalStorage.getJson decodeHighlights "highlights")
+  Task.perform FetchFail FetchSucceed getHighlights
 
 
 -- PRIVATE API
 
-decodeHighlights : Json.Decoder Highlights
-decodeHighlights =
-  Json.dict (Json.list Json.string)
+getHighlights : Task LocalStorage.Error (Maybe Highlights)
+getHighlights =
+  LocalStorage.getJson decodeHighlights "highlights"
+
+mergeHighlights : String -> String -> Task LocalStorage.Error ()
+mergeHighlights date h =
+  getHighlights `andThen` \maybeHighlights ->
+    let
+      highlights =
+        case maybeHighlights of
+          Just highlights ->
+            addHighlight date h highlights
+
+          Nothing ->
+            Dict.singleton date [h]
+    in
+      LocalStorage.set "highlights" (encodeHighlights highlights)
 
 
-encode : Highlights -> String
-encode highlights =
+encodeHighlights : Highlights -> String
+encodeHighlights highlights =
   Dict.toList highlights
     |> List.map encodeTuple
     |> Encode.object
@@ -71,3 +85,20 @@ encode highlights =
 encodeTuple : (String, List String) -> (String, Encode.Value)
 encodeTuple (k, v) =
   (k, Encode.list (List.map Encode.string v))
+
+
+decodeHighlights : Json.Decoder Highlights
+decodeHighlights =
+  Json.dict (Json.list Json.string)
+
+
+addHighlight : String -> String -> Highlights -> Highlights
+addHighlight date h highlights =
+  case Dict.get date highlights of
+    Just list ->
+      Dict.insert date (list ++ [h]) highlights
+
+    Nothing ->
+      Dict.insert date [h] highlights
+
+
