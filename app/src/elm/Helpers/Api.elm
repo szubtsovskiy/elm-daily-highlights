@@ -46,7 +46,7 @@ save h =
   let
     highlights = Dict.singleton "ph" [h]
   in
-    Task.perform SaveFail (always (SaveSucceed highlights)) (mergeHighlights "ph" h)
+    Task.perform SaveFail (always (SaveSucceed highlights)) (mergeHighlights highlights)
 
 
 fetch : Cmd Action
@@ -60,19 +60,19 @@ getHighlights : Task LocalStorage.Error (Maybe Highlights)
 getHighlights =
   LocalStorage.getJson decodeHighlights "highlights"
 
-mergeHighlights : String -> String -> Task LocalStorage.Error ()
-mergeHighlights date h =
+mergeHighlights : Highlights -> Task LocalStorage.Error ()
+mergeHighlights highlights =
   getHighlights `andThen` \maybeHighlights ->
     let
-      highlights =
+      newHighlights =
         case maybeHighlights of
-          Just highlights ->
-            addHighlight date h highlights
+          Just storedHighlights ->
+            Dict.foldr addHighlights storedHighlights highlights
 
           Nothing ->
-            Dict.singleton date [h]
+            highlights
     in
-      LocalStorage.set "highlights" (encodeHighlights highlights)
+      LocalStorage.set "highlights" (encodeHighlights newHighlights)
 
 
 encodeHighlights : Highlights -> String
@@ -92,13 +92,13 @@ decodeHighlights =
   Json.dict (Json.list Json.string)
 
 
-addHighlight : String -> String -> Highlights -> Highlights
-addHighlight date h highlights =
+addHighlights : String -> List String -> Highlights -> Highlights
+addHighlights date hs highlights =
   case Dict.get date highlights of
     Just list ->
-      Dict.insert date (list ++ [h]) highlights
+      Dict.insert date (list ++ hs) highlights
 
     Nothing ->
-      Dict.insert date [h] highlights
+      Dict.insert date hs highlights
 
 
