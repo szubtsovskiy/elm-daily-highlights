@@ -1,11 +1,12 @@
 module App exposing (main)
 
 import Dict exposing (Dict, values)
+import Helpers.Api as Api
+import Helpers.Highlights as Highlights exposing (Highlights)
 import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, on, keyCode)
-import Helpers.Api as Api
 import Json.Decode as Json
 import List exposing (map, foldr)
 import Result exposing (Result(Ok, Err))
@@ -31,13 +32,13 @@ type alias Styles =
   }
 
 type alias Model =
-  { items : Dict String (List String)
+  { highlights : Highlights
   , current : String
   , styles : Styles
   }
 
 
--- TODO next: bind highlights to current date and store object {[date]: [highlights]}
+-- TODO next: bind highlights to a date
 -- TODO next: sort highlights by date
 -- TODO next: display highlights for 3 days including today
 -- TODO next: add infinite scroll backwards
@@ -59,7 +60,7 @@ update action model =
     ReceiveHighlights action ->
       case Api.receive action of
         Ok highlights ->
-          ({model | items = Dict.union highlights model.items}, Cmd.none)
+          ({model | highlights = Highlights.merge model.highlights highlights}, Cmd.none)
 
         Err err ->
           let
@@ -73,11 +74,7 @@ update action model =
     KeyDown code ->
       case code of
         13 ->
-          let
-            new = {model | current = ""}
-            items = new.items
-          in
-            (new, Cmd.map ReceiveHighlights (Api.save model.current))
+          ({model | current = ""}, Cmd.map ReceiveHighlights (Api.save model.current))
         27 ->
           ({model | current = ""}, Cmd.none)
 
@@ -89,7 +86,7 @@ update action model =
 view : Model -> Html Action
 view model =
   let
-    paras = map para (foldr (++) [] (values model.items))
+    paras = map para (foldr (++) [] (values model.highlights))
     styles = model.styles
   in
     div []
@@ -118,4 +115,4 @@ onKeyDown tagger =
 
 init : Styles -> (Model, Cmd Action)
 init styles =
-  ({items = Dict.empty, current = "", styles = styles}, Cmd.map ReceiveHighlights Api.fetch)
+  ({highlights = Dict.empty, current = "", styles = styles}, Cmd.map ReceiveHighlights Api.fetch)

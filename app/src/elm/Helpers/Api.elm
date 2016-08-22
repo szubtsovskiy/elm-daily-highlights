@@ -1,15 +1,12 @@
-module Helpers.Api exposing (Highlights, Action, save, fetch, receive)
+module Helpers.Api exposing (Action, save, fetch, receive)
 
-import Dict exposing (Dict)
+import Dict
+import Helpers.Highlights as Highlights exposing (Highlights)
 import Helpers.LocalStorage as LocalStorage
 import Json.Encode as Encode
 import Json.Decode as Json
 import Result exposing (Result(Ok, Err))
 import Task exposing (Task, andThen)
-
--- MODEL
-
-type alias Highlights = Dict String (List String)
 
 -- PUBLIC API
 
@@ -67,7 +64,7 @@ mergeHighlights highlights =
       newHighlights =
         case maybeHighlights of
           Just storedHighlights ->
-            Dict.foldr addHighlights storedHighlights highlights
+            Highlights.merge storedHighlights highlights
 
           Nothing ->
             highlights
@@ -90,15 +87,4 @@ encodeTuple (k, v) =
 decodeHighlights : Json.Decoder Highlights
 decodeHighlights =
   Json.dict (Json.list Json.string)
-
-
-addHighlights : String -> List String -> Highlights -> Highlights
-addHighlights date hs highlights =
-  case Dict.get date highlights of
-    Just list ->
-      Dict.insert date (list ++ hs) highlights
-
-    Nothing ->
-      Dict.insert date hs highlights
-
 
