@@ -4,6 +4,7 @@ import Date exposing (Date)
 import Dict exposing (Dict, get, insert)
 import Json.Encode as Encode
 import Json.Decode as Json
+import Result exposing (Result(Ok, Err))
 import String exposing (join)
 
 type alias Highlights = Dict String (List String)
@@ -38,9 +39,11 @@ jsonDecode =
   Json.dict (Json.list Json.string)
 
 
-toList : Highlights -> List (String, List String)
+toList : Highlights -> List (Date, List String)
 toList highlights =
   Dict.toList highlights
+   |> List.map parseDate
+   |> List.filterMap hasDate
 
 -- PRIVATE API
 
@@ -58,9 +61,11 @@ addHighlights date highlights target =
   in
     insert date newHighlights target
 
+
 encodeTuple : (String, List String) -> (String, Encode.Value)
 encodeTuple (k, v) =
   (k, Encode.list (List.map Encode.string v))
+
 
 formatDate : Date -> String
 formatDate date =
@@ -68,3 +73,21 @@ formatDate date =
     (year, month, day) = (Date.year date, Date.month date, Date.day date)
   in
     [(toString year), (toString month), (toString day)] |> join "-"
+
+
+parseDate : (String, x) -> (Result String Date, x)
+parseDate (date, x) =
+  (Date.fromString date, x)
+
+
+hasDate : (Result String Date, x) -> Maybe (Date, x)
+hasDate (result, x) =
+  case result of
+    Ok date ->
+      Just (date, x)
+
+    Err err ->
+      let
+        _ = Debug.log "Not a date: " err
+      in
+        Nothing

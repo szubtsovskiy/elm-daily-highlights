@@ -97,7 +97,7 @@ getToday =
 view : Model -> Html Action
 view model =
   let
-    sections = map section (Highlights.toList model.highlights)
+    sections = map (section model.today) (Highlights.toList model.highlights)
     styles = model.styles
   in
     div []
@@ -106,19 +106,32 @@ view model =
     ]
 
 
-section : (String, List String) -> Html Action
-section (date, highlights) =
-  fieldset [] ((title date) :: (map highlight highlights))
+section : Maybe Date -> (Date, List String) -> Html Action
+section maybeToday (date, highlights) =
+  fieldset [] ((title maybeToday date) :: (map highlight highlights))
 
 
-title : String -> Html Action
-title date =
-  legend [] [ text date ]
+title : Maybe Date -> Date -> Html Action
+title maybeToday date =
+  let
+    displayDate = case maybeToday of
+      Just today ->
+        formatDate date
+
+      Nothing ->
+        formatDate date
+
+  in
+    legend [] [ text displayDate ]
 
 
 highlight : String -> Html Action
 highlight content =
   p [] [ text content ]
+
+formatDate : Date -> String
+formatDate date =
+  toString date
 
 --onScroll : (Int -> action) -> Attribute action
 --onScroll tagger =
