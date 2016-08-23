@@ -1,6 +1,6 @@
 module App exposing (main)
 
-import Date exposing (Date)
+import Date exposing (Date, year, month, day, hour, minute, second, millisecond, toTime)
 import Helpers.Api as Api
 import Helpers.Highlights as Highlights exposing (Highlights)
 import Html exposing (..)
@@ -10,6 +10,7 @@ import Html.Events exposing (onInput, on, keyCode)
 import Json.Decode as Json
 import List exposing (map, foldr)
 import Result exposing (Result(Ok, Err))
+import String exposing (join)
 import Task
 
 -- MAIN
@@ -40,8 +41,8 @@ type alias Model =
   }
 
 
--- TODO next: sort highlights by date
 -- TODO next: display highlights for 3 days including today
+-- TODO next: sort highlights by date (asc)
 -- TODO next: add function generating sample data for today.. -1 week
 -- TODO next: add infinite scroll backwards
 
@@ -116,7 +117,16 @@ title maybeToday date =
   let
     displayDate = case maybeToday of
       Just today ->
-        formatDate date
+        if isToday date today then
+          "Today"
+        else if isYesterday date today then
+          "Yesterday"
+        else if isTwoDaysAgo date today then
+          "Two days ago"
+        else if isThreeDaysAgo date today then
+          "Three days ago"
+        else
+          formatDate date
 
       Nothing ->
         formatDate date
@@ -129,9 +139,47 @@ highlight : String -> Html Action
 highlight content =
   p [] [ text content ]
 
+
+isToday : Date -> Date -> Bool
+isToday date today =
+   subtract today date == 0
+
+
+isYesterday : Date -> Date -> Bool
+isYesterday date today =
+  subtract today date == 24 * 3600 * 1000
+
+isTwoDaysAgo : Date -> Date -> Bool
+isTwoDaysAgo date today =
+  subtract today date == 2 * 24 * 3600 * 1000
+
+
+isThreeDaysAgo : Date -> Date -> Bool
+isThreeDaysAgo date today =
+  subtract today date == 3 * 24 * 3600 * 1000
+
 formatDate : Date -> String
 formatDate date =
-  toString date
+  let
+    y = toString (year date)
+    m = toString (month date)
+    d = toString (day date)
+  in
+    [y, m, d] |> join "-"
+
+subtract : Date -> Date -> Int
+subtract a b =
+  (datestamp a) - (datestamp b)
+
+datestamp : Date -> Int
+datestamp date =
+  let
+    h = hour date
+    m = minute date
+    s = second date
+    ms = millisecond date
+  in
+    (round (toTime date)) - h * 3600 * 1000 - m * 60 * 1000 - s * 1000 - ms
 
 --onScroll : (Int -> action) -> Attribute action
 --onScroll tagger =
