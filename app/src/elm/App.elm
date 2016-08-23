@@ -42,8 +42,6 @@ type alias Model =
 
 
 -- TODO next: display highlights for 3 days including today
--- TODO next: sort highlights by date (asc)
--- TODO next: add function generating sample data for today.. -1 week
 -- TODO next: add infinite scroll backwards
 
 -- UPDATE
@@ -98,7 +96,8 @@ getToday =
 view : Model -> Html Action
 view model =
   let
-    sections = map (section model.today) (Highlights.toList model.highlights)
+    highlights = Highlights.toList model.highlights |> List.sortBy (\(date, _) -> toTime date)
+    sections = map (section model.today) highlights
     styles = model.styles
   in
     div []
