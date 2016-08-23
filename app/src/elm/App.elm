@@ -81,23 +81,34 @@ update action model =
         _ ->
           (model, Cmd.none)
 
+
 -- VIEW
 
 view : Model -> Html Action
 view model =
   let
-    paras = map para (foldr (++) [] (values model.highlights))
+    sections = map section (Dict.toList model.highlights)
     styles = model.styles
   in
     div []
-    [ div [ class styles.container ] paras
+    [ div [ class styles.container ] sections
     , input [ type' "text", class styles.input, placeholder "Highlight", onInput SetCurrent, onKeyDown KeyDown, value model.current ] []
     ]
 
 
-para : String -> Html Action
-para content =
-  p [] [text content]
+section : (String, List String) -> Html Action
+section (date, highlights) =
+  fieldset [] ((title date) :: (map highlight highlights))
+
+
+title : String -> Html Action
+title date =
+  legend [] [ text date ]
+
+
+highlight : String -> Html Action
+highlight content =
+  p [] [ text content ]
 
 --onScroll : (Int -> action) -> Attribute action
 --onScroll tagger =
