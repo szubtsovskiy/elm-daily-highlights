@@ -1,5 +1,6 @@
 module App exposing (main)
 
+import Date exposing (Date)
 import Helpers.Api as Api
 import Helpers.Highlights as Highlights exposing (Highlights)
 import Html exposing (..)
@@ -9,6 +10,7 @@ import Html.Events exposing (onInput, on, keyCode)
 import Json.Decode as Json
 import List exposing (map, foldr)
 import Result exposing (Result(Ok, Err))
+import Task
 
 -- MAIN
 
@@ -33,12 +35,14 @@ type alias Styles =
 type alias Model =
   { highlights : Highlights
   , current : String
+  , today : Maybe Date
   , styles : Styles
   }
 
 
 -- TODO next: sort highlights by date
 -- TODO next: display highlights for 3 days including today
+-- TODO next: add function generating sample data for today.. -1 week
 -- TODO next: add infinite scroll backwards
 
 -- UPDATE
@@ -46,6 +50,7 @@ type alias Model =
 type Action
   = NoOp
   | ReceiveHighlights Api.Action
+  | ReceiveToday Date
   | SetCurrent String
   | KeyDown Int
 
@@ -58,13 +63,16 @@ update action model =
     ReceiveHighlights action ->
       case Api.receive action of
         Ok highlights ->
-          ({model | highlights = Highlights.merge model.highlights highlights}, Cmd.none)
+          ({model | highlights = Highlights.merge model.highlights highlights}, getToday)
 
         Err err ->
           let
             _ = Debug.log "Error: " err
           in
             (model, Cmd.none)
+
+    ReceiveToday date ->
+      ({model | today = Just date}, Cmd.none)
 
     SetCurrent value ->
       ({model | current = value}, Cmd.none)
@@ -79,6 +87,10 @@ update action model =
         _ ->
           (model, Cmd.none)
 
+
+getToday : Cmd Action
+getToday =
+  Task.perform (always NoOp) ReceiveToday Date.now
 
 -- VIEW
 
@@ -124,4 +136,4 @@ onKeyDown tagger =
 
 init : Styles -> (Model, Cmd Action)
 init styles =
-  ({highlights = Highlights.empty, current = "", styles = styles}, Cmd.map ReceiveHighlights Api.fetch)
+  ({highlights = Highlights.empty, current = "", today = Nothing, styles = styles}, Cmd.map ReceiveHighlights Api.fetch)
