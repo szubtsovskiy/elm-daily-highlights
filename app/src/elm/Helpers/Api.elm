@@ -1,5 +1,6 @@
 module Helpers.Api exposing (Action, save, fetch, receive)
 
+import Date exposing (Date)
 import Dict
 import Helpers.Highlights as Highlights exposing (Highlights)
 import Helpers.LocalStorage as LocalStorage
@@ -7,6 +8,7 @@ import Json.Encode as Encode
 import Json.Decode as Json
 import Result exposing (Result(Ok, Err))
 import Task exposing (Task, andThen, succeed)
+
 
 -- PUBLIC API
 
@@ -40,10 +42,7 @@ receive action =
 
 save : String -> Cmd Action
 save h =
-  let
-    highlights = Dict.singleton "ph" [h]
-  in
-    Task.perform SaveFail SaveSucceed (mergeHighlights highlights)
+  Task.perform SaveFail SaveSucceed (addTodayHighlight h)
 
 
 fetch : Cmd Action
@@ -56,6 +55,10 @@ fetch =
 getHighlights : Task LocalStorage.Error (Maybe Highlights)
 getHighlights =
   LocalStorage.getJson decodeHighlights "highlights"
+
+addTodayHighlight : String -> Task LocalStorage.Error Highlights
+addTodayHighlight h =
+  Date.now `andThen` \today -> mergeHighlights (Highlights.singleton today [h])
 
 mergeHighlights : Highlights -> Task LocalStorage.Error Highlights
 mergeHighlights highlights =
@@ -87,4 +90,3 @@ encodeTuple (k, v) =
 decodeHighlights : Json.Decoder Highlights
 decodeHighlights =
   Json.dict (Json.list Json.string)
-
