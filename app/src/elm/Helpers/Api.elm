@@ -6,7 +6,7 @@ import Helpers.LocalStorage as LocalStorage
 import Json.Encode as Encode
 import Json.Decode as Json
 import Result exposing (Result(Ok, Err))
-import Task exposing (Task, andThen)
+import Task exposing (Task, andThen, succeed)
 
 -- PUBLIC API
 
@@ -43,7 +43,7 @@ save h =
   let
     highlights = Dict.singleton "ph" [h]
   in
-    Task.perform SaveFail (always (SaveSucceed highlights)) (mergeHighlights highlights)
+    Task.perform SaveFail SaveSucceed (mergeHighlights highlights)
 
 
 fetch : Cmd Action
@@ -57,7 +57,7 @@ getHighlights : Task LocalStorage.Error (Maybe Highlights)
 getHighlights =
   LocalStorage.getJson decodeHighlights "highlights"
 
-mergeHighlights : Highlights -> Task LocalStorage.Error ()
+mergeHighlights : Highlights -> Task LocalStorage.Error Highlights
 mergeHighlights highlights =
   getHighlights `andThen` \maybeHighlights ->
     let
@@ -69,7 +69,7 @@ mergeHighlights highlights =
           Nothing ->
             highlights
     in
-      LocalStorage.set "highlights" (encodeHighlights newHighlights)
+      LocalStorage.set "highlights" (encodeHighlights newHighlights) `andThen` \_ -> succeed highlights
 
 
 encodeHighlights : Highlights -> String
