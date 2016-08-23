@@ -1,11 +1,8 @@
 module Helpers.Api exposing (Action, save, fetch, receive)
 
 import Date exposing (Date)
-import Dict
-import Helpers.Highlights as Highlights exposing (Highlights)
+import Helpers.Highlights as Highlights exposing (Highlights, jsonEncode, jsonDecode)
 import Helpers.LocalStorage as LocalStorage
-import Json.Encode as Encode
-import Json.Decode as Json
 import Result exposing (Result(Ok, Err))
 import Task exposing (Task, andThen, succeed)
 
@@ -34,7 +31,7 @@ receive action =
           Ok highlights
 
         Nothing ->
-          Ok Dict.empty
+          Ok Highlights.empty
 
     FetchFail err ->
       Err (toString err)
@@ -54,7 +51,7 @@ fetch =
 
 getHighlights : Task LocalStorage.Error (Maybe Highlights)
 getHighlights =
-  LocalStorage.getJson decodeHighlights "highlights"
+  LocalStorage.getJson jsonDecode "highlights"
 
 addTodayHighlight : String -> Task LocalStorage.Error Highlights
 addTodayHighlight h =
@@ -72,21 +69,5 @@ mergeHighlights highlights =
           Nothing ->
             highlights
     in
-      LocalStorage.set "highlights" (encodeHighlights newHighlights) `andThen` \_ -> succeed highlights
+      LocalStorage.set "highlights" (jsonEncode newHighlights) `andThen` \_ -> succeed highlights
 
-
-encodeHighlights : Highlights -> String
-encodeHighlights highlights =
-  Dict.toList highlights
-    |> List.map encodeTuple
-    |> Encode.object
-    |> Encode.encode 0
-
-encodeTuple : (String, List String) -> (String, Encode.Value)
-encodeTuple (k, v) =
-  (k, Encode.list (List.map Encode.string v))
-
-
-decodeHighlights : Json.Decoder Highlights
-decodeHighlights =
-  Json.dict (Json.list Json.string)

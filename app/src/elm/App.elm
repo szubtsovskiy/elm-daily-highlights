@@ -1,6 +1,5 @@
 module App exposing (main)
 
-import Dict exposing (Dict, values)
 import Helpers.Api as Api
 import Helpers.Highlights as Highlights exposing (Highlights)
 import Html exposing (..)
@@ -38,7 +37,6 @@ type alias Model =
   }
 
 
--- TODO next: bind highlights to a date
 -- TODO next: sort highlights by date
 -- TODO next: display highlights for 3 days including today
 -- TODO next: add infinite scroll backwards
@@ -87,7 +85,7 @@ update action model =
 view : Model -> Html Action
 view model =
   let
-    sections = map section (Dict.toList model.highlights)
+    sections = map section (Highlights.toList model.highlights)
     styles = model.styles
   in
     div []
@@ -126,4 +124,4 @@ onKeyDown tagger =
 
 init : Styles -> (Model, Cmd Action)
 init styles =
-  ({highlights = Dict.empty, current = "", styles = styles}, Cmd.map ReceiveHighlights Api.fetch)
+  ({highlights = Highlights.empty, current = "", styles = styles}, Cmd.map ReceiveHighlights Api.fetch)
