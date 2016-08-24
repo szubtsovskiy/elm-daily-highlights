@@ -42,8 +42,8 @@ save h =
   Task.perform SaveFail SaveSucceed (addTodayHighlight h)
 
 
-fetch : Cmd Action
-fetch =
+fetch : Date -> Date -> Cmd Action
+fetch from to =
   Task.perform FetchFail FetchSucceed getHighlights
 
 

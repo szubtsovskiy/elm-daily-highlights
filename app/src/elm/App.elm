@@ -48,6 +48,7 @@ type alias Model =
 
 type Action
   = NoOp
+  | Init Date
   | ReceiveHighlights Api.Action
   | ReceiveToday Date
   | SetCurrent String
@@ -59,10 +60,13 @@ update action model =
     NoOp ->
       (model, Cmd.none)
 
+    Init date ->
+      (model, Cmd.map ReceiveHighlights (Api.fetch date date))
+
     ReceiveHighlights action ->
       case Api.receive action of
         Ok highlights ->
-          ({model | highlights = Highlights.merge model.highlights highlights}, getToday)
+          ({model | highlights = Highlights.merge model.highlights highlights}, (getToday ReceiveToday))
 
         Err err ->
           let
@@ -87,9 +91,9 @@ update action model =
           (model, Cmd.none)
 
 
-getToday : Cmd Action
-getToday =
-  Task.perform (always NoOp) ReceiveToday Date.now
+getToday : (Date -> Action) -> Cmd Action
+getToday action =
+  Task.perform (always NoOp) action Date.now
 
 -- VIEW
 
@@ -196,4 +200,5 @@ onKeyDown tagger =
 
 init : Styles -> (Model, Cmd Action)
 init styles =
-  ({highlights = Highlights.empty, current = "", today = Nothing, styles = styles}, Cmd.map ReceiveHighlights Api.fetch)
+  ({highlights = Highlights.empty, current = "", today = Nothing, styles = styles}, (getToday Init))
+
