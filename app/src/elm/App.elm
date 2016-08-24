@@ -62,10 +62,7 @@ update action model =
       (model, Cmd.none)
 
     Init date ->
-      model !
-        [ Cmd.map ReceiveHighlights (Api.fetch (Dates.subtract 3 Day date) date)
-        , Task.perform (always NoOp) (always NoOp) (Dom.Scroll.toBottom "highlights")
-        ]
+      model ! [ fetchHighlights (Dates.subtract 2 Day date) date, scrollToBottom "highlights" ]
 
     ReceiveHighlights action ->
       case Api.receive action of
@@ -93,12 +90,7 @@ update action model =
                 newHighlights = Highlights.singleton today [model.current]
                   |> Highlights.merge model.highlights
               in
-                { model | current = ""
-                , highlights = newHighlights
-                } !
-                [ Cmd.map (always NoOp) (Api.save model.current today)
-                , Task.perform (always NoOp) (always NoOp) (Dom.Scroll.toBottom "highlights")
-                ]
+                { model | current = "", highlights = newHighlights } ! [ saveHighlight model.current today, scrollToBottom "highlights" ]
 
             Nothing ->
               (model, Cmd.none)
@@ -110,9 +102,18 @@ update action model =
           (model, Cmd.none)
 
 
-getToday : (Date -> Action) -> Cmd Action
-getToday action =
-  Task.perform (always NoOp) action Date.now
+saveHighlight : String -> Date -> Cmd Action
+saveHighlight highlight date =
+  Cmd.map (always NoOp) (Api.save highlight date)
+
+fetchHighlights : Date -> Date -> Cmd Action
+fetchHighlights from to =
+  Cmd.map ReceiveHighlights (Api.fetch from to)
+
+scrollToBottom : String -> Cmd Action
+scrollToBottom id =
+  Task.perform (always NoOp) (always NoOp) (Dom.Scroll.toBottom id)
+
 
 -- VIEW
 
