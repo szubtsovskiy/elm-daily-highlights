@@ -37,9 +37,9 @@ receive action =
       Err (toString err)
 
 
-save : String -> Cmd Action
-save h =
-  Task.perform SaveFail SaveSucceed (addTodayHighlight h)
+save : String -> Date -> Cmd Action
+save h date =
+  Task.perform SaveFail SaveSucceed (mergeHighlights (Highlights.singleton date [h]))
 
 
 fetch : Date -> Date -> Cmd Action
@@ -53,9 +53,6 @@ getHighlights : Task LocalStorage.Error (Maybe Highlights)
 getHighlights =
   LocalStorage.getJson jsonDecode "highlights"
 
-addTodayHighlight : String -> Task LocalStorage.Error Highlights
-addTodayHighlight h =
-  Date.now `andThen` \today -> mergeHighlights (Highlights.singleton today [h])
 
 mergeHighlights : Highlights -> Task LocalStorage.Error Highlights
 mergeHighlights highlights =

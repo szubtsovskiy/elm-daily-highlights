@@ -83,7 +83,13 @@ update action model =
     KeyDown code ->
       case code of
         13 ->
-          ({model | current = ""}, Cmd.map ReceiveHighlights (Api.save model.current))
+          case model.today of
+            Just date ->
+              ({model | current = ""}, Cmd.map ReceiveHighlights (Api.save model.current date))
+
+            Nothing ->
+              (model, Cmd.none)
+
         27 ->
           ({model | current = ""}, Cmd.none)
 
