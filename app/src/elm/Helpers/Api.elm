@@ -1,6 +1,7 @@
 module Helpers.Api exposing (Action, save, fetch, receive)
 
 import Date exposing (Date)
+import Helpers.Dates as Dates
 import Helpers.Highlights as Highlights exposing (Highlights, jsonEncode, jsonDecode)
 import Helpers.LocalStorage as LocalStorage
 import List exposing (filter)
@@ -83,9 +84,4 @@ extractHighlights from to maybeHighlights =
 
 belongsToPeriod : Date -> Date -> (Date, List String) -> Bool
 belongsToPeriod from to (date, x) =
-  let
-    fromMs = Date.toTime from
-    toMs = Date.toTime to
-    dateMs = Date.toTime date
-  in
-    fromMs <= dateMs && dateMs <= toMs
+  Dates.between from to date

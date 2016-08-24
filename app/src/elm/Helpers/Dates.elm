@@ -1,4 +1,4 @@
-module Helpers.Dates exposing (today)
+module Helpers.Dates exposing (today, between)
 
 import Date exposing (Date, toTime, fromTime)
 import Task exposing (Task, andThen)
@@ -12,6 +12,14 @@ today =
     |> fromTime
     |> Task.succeed
 
+between : Date -> Date -> Date -> Bool
+between from to date =
+  let
+    fromMs = Date.toTime from
+    toMs = Date.toTime to
+    dateMs = Date.toTime date
+  in
+    fromMs <= dateMs && dateMs <= toMs
 
 -- PRIVATE API
 
