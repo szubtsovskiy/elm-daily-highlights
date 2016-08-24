@@ -42,7 +42,6 @@ type alias Model =
   }
 
 
--- TODO next: fix bug with always appending highlights to the list
 -- TODO next: add infinite scroll backwards
 
 -- UPDATE
@@ -67,8 +66,7 @@ update action model =
     ReceiveHighlights action ->
       case Api.receive action of
         Ok highlights ->
-          { model | highlights = Highlights.merge model.highlights highlights
-          } ! [Task.perform (always NoOp) ReceiveToday Dates.today]
+          { model | highlights = highlights } ! [Task.perform (always NoOp) ReceiveToday Dates.today]
 
         Err err ->
           let
@@ -86,8 +84,14 @@ update action model =
       case code of
         13 ->
           case model.today of
-            Just date ->
-              ({model | current = ""}, Cmd.map ReceiveHighlights (Api.save model.current date))
+            Just today ->
+              let
+                newHighlights = Highlights.singleton today [model.current]
+                  |> Highlights.merge model.highlights
+              in
+                { model | current = ""
+                , highlights = newHighlights
+                } ! [Cmd.map (always NoOp) (Api.save model.current today)]
 
             Nothing ->
               (model, Cmd.none)
