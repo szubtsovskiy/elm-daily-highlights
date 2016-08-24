@@ -1,9 +1,10 @@
-module Helpers.Highlights exposing (Highlights, empty, singleton, merge, jsonEncode, jsonDecode, toList)
+module Helpers.Highlights exposing (Highlights, empty, singleton, merge, jsonEncode, jsonDecode, toList, fromList)
 
 import Date exposing (Date)
 import Dict exposing (Dict, get, insert)
 import Json.Encode as Encode
 import Json.Decode as Json
+import List exposing (map)
 import Result exposing (Result(Ok, Err))
 import String exposing (join)
 
@@ -20,6 +21,10 @@ singleton : Date -> List String -> Highlights
 singleton date highlights =
   Dict.singleton (formatDate date) highlights
 
+fromList : List (Date, List String) -> Highlights
+fromList list =
+  map (\(date, x) -> (formatDate date, x)) list
+    |> Dict.fromList
 
 merge : Highlights -> Highlights -> Highlights
 merge h1 h2 =
