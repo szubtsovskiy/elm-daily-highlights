@@ -1,6 +1,7 @@
 module App exposing (main)
 
 import Date exposing (Date, year, month, day, hour, minute, second, millisecond, toTime)
+import Dom.Scroll
 import Helpers.Api as Api
 import Helpers.Dates as Dates exposing (Unit(..))
 import Helpers.Highlights as Highlights exposing (Highlights)
@@ -61,7 +62,10 @@ update action model =
       (model, Cmd.none)
 
     Init date ->
-      (model, Cmd.map ReceiveHighlights (Api.fetch (Dates.subtract 3 Day date) date))
+      model !
+        [ Cmd.map ReceiveHighlights (Api.fetch (Dates.subtract 3 Day date) date)
+        , Task.perform (always NoOp) (always NoOp) (Dom.Scroll.toBottom "highlights")
+        ]
 
     ReceiveHighlights action ->
       case Api.receive action of
@@ -91,7 +95,10 @@ update action model =
               in
                 { model | current = ""
                 , highlights = newHighlights
-                } ! [Cmd.map (always NoOp) (Api.save model.current today)]
+                } !
+                [ Cmd.map (always NoOp) (Api.save model.current today)
+                , Task.perform (always NoOp) (always NoOp) (Dom.Scroll.toBottom "highlights")
+                ]
 
             Nothing ->
               (model, Cmd.none)
@@ -116,8 +123,8 @@ view model =
     sections = map (section model.today) highlights
     styles = model.styles
   in
-    div []
-    [ div [ class styles.container ] sections
+    div [ ]
+    [ div [ id "highlights", class styles.container ] sections
     , input [ type' "text", class styles.input, placeholder "Highlight", onInput SetCurrent, onKeyDown KeyDown, value model.current ] []
     ]
 
