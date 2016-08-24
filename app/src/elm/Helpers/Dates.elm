@@ -1,4 +1,4 @@
-module Helpers.Dates exposing (Unit(..), today, between, subtract)
+module Helpers.Dates exposing (Unit(..), today, between, subtract, same)
 
 import Date exposing (Date, toTime, fromTime)
 import Task exposing (Task, andThen)
@@ -33,6 +33,11 @@ subtract n unit date =
     Day ->
       (toTime date) - (toFloat n) * 24 * hour
         |> fromTime
+
+
+same : Date -> Date -> Bool
+same a b =
+  (datestamp a) - (datestamp b) == 0
 
 
 -- PRIVATE API

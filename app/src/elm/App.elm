@@ -153,21 +153,25 @@ highlight content =
 
 isToday : Date -> Date -> Bool
 isToday date today =
-   subtract today date == 0
+   Dates.same today date
 
 
 isYesterday : Date -> Date -> Bool
 isYesterday date today =
-  subtract today date == 24 * 3600 * 1000
+  Dates.subtract 1 Day today
+    |> Dates.same date
 
 isTwoDaysAgo : Date -> Date -> Bool
 isTwoDaysAgo date today =
-  subtract today date == 2 * 24 * 3600 * 1000
+  Dates.subtract 2 Day today
+    |> Dates.same date
 
 
 isThreeDaysAgo : Date -> Date -> Bool
 isThreeDaysAgo date today =
-  subtract today date == 3 * 24 * 3600 * 1000
+  Dates.subtract 3 Day today
+    |> Dates.same date
+
 
 formatDate : Date -> String
 formatDate date =
@@ -177,20 +181,6 @@ formatDate date =
     d = toString (day date)
   in
     [y, m, d] |> join "-"
-
-subtract : Date -> Date -> Int
-subtract a b =
-  (datestamp a) - (datestamp b)
-
-datestamp : Date -> Int
-datestamp date =
-  let
-    h = hour date
-    m = minute date
-    s = second date
-    ms = millisecond date
-  in
-    (round (toTime date)) - h * 3600 * 1000 - m * 60 * 1000 - s * 1000 - ms
 
 --onScroll : (Int -> action) -> Attribute action
 --onScroll tagger =
