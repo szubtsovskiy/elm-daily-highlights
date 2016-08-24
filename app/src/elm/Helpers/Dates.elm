@@ -1,4 +1,4 @@
-module Helpers.Dates exposing (today, between)
+module Helpers.Dates exposing (Unit(..), today, between, subtract)
 
 import Date exposing (Date, toTime, fromTime)
 import Task exposing (Task, andThen)
@@ -6,11 +6,16 @@ import Time exposing (hour, minute, second, millisecond)
 
 -- PUBLIC API
 
+type Unit
+  = Day
+
+
 today : Task x Date
 today =
   Date.now `andThen` \now -> datestamp now
     |> fromTime
     |> Task.succeed
+
 
 between : Date -> Date -> Date -> Bool
 between from to date =
@@ -20,6 +25,15 @@ between from to date =
     dateMs = Date.toTime date
   in
     fromMs <= dateMs && dateMs <= toMs
+
+
+subtract : Int -> Unit -> Date -> Date
+subtract n unit date =
+  case unit of
+    Day ->
+      (toTime date) - (toFloat n) * 24 * hour
+        |> fromTime
+
 
 -- PRIVATE API
 

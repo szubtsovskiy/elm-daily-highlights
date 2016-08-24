@@ -2,7 +2,7 @@ module App exposing (main)
 
 import Date exposing (Date, year, month, day, hour, minute, second, millisecond, toTime)
 import Helpers.Api as Api
-import Helpers.Dates as Dates
+import Helpers.Dates as Dates exposing (Unit(..))
 import Helpers.Highlights as Highlights exposing (Highlights)
 import Html exposing (..)
 import Html.App as Html
@@ -42,7 +42,6 @@ type alias Model =
   }
 
 
--- TODO next: display highlights for 3 days including today
 -- TODO next: fix bug with always appending highlights to the list
 -- TODO next: add infinite scroll backwards
 
@@ -63,7 +62,7 @@ update action model =
       (model, Cmd.none)
 
     Init date ->
-      (model, Cmd.map ReceiveHighlights (Api.fetch date date))
+      (model, Cmd.map ReceiveHighlights (Api.fetch (Dates.subtract 3 Day date) date))
 
     ReceiveHighlights action ->
       case Api.receive action of
