@@ -9,7 +9,7 @@
     "url": "https://github.com/szubtsovskiy/elm-daily-highlights.git"
   },
   "scripts": {
-    "start": "npm run build && node_modules/http-server/bin/http-server ./dist -p $PORT",
+    "start": "node_modules/http-server/bin/http-server ./dist -p $PORT",
     "build": "rimraf dist && webpack",
     "dev": "webpack-dev-server --hot --inline --content-base app/",
     "watch": "webpack --watch"
