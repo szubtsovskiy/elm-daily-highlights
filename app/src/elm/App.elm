@@ -43,7 +43,6 @@ type alias Model =
   }
 
 
--- TODO next: scroll down a little after loading new highlights
 -- TODO next: add highlights on scroll to the model instead of replacing the model
 -- TODO next: add AjaxLoader
 
@@ -111,12 +110,12 @@ update action model =
         in
           case minDate of
             Just date ->
-              model ! [ fetchHighlights (Dates.subtract 1 Day date) date ]
+              model ! [ fetchHighlights (Dates.subtract 1 Day date) date, scrollToY "highlights" 40 ]
 
             Nothing ->
               case model.today of
                 Just date ->
-                  model ! [ fetchHighlights (Dates.subtract 1 Day date) date ]
+                  model ! [ fetchHighlights (Dates.subtract 1 Day date) date, scrollToY "highlights" 40 ]
 
                 Nothing ->
                   (model, Cmd.none)
@@ -136,6 +135,9 @@ scrollToBottom : String -> Cmd Action
 scrollToBottom id =
   Task.perform (always NoOp) (always NoOp) (Dom.Scroll.toBottom id)
 
+scrollToY : String -> Float -> Cmd Action
+scrollToY id px =
+  Task.perform (always NoOp) (always NoOp) (Dom.Scroll.toY id px)
 
 -- VIEW
 
