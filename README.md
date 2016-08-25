@@ -10,6 +10,8 @@ thoughts, results which are worth noting and other interesting stuff.
 First, proof-of-concept version, allows saving these in the browser's local storage.
 Saving and fetching stuff is implemented as separate module to easily replace storage facility with something else.
 
+[Demo on Heroku] (https://elm-daily-highlights.herokuapp.com)
+
 ### Requirements
 
 * Elm 0.17.1-0.18.0
@@ -17,7 +19,7 @@ Saving and fetching stuff is implemented as separate module to easily replace st
 ### Development
 
 ```
-npm start
+npm run dev
 ```
 
 Application will be accessible at http://localhost:8080. Code changes will be automatically reloaded.
