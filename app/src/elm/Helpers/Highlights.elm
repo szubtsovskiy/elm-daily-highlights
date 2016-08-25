@@ -1,6 +1,7 @@
 module Helpers.Highlights exposing (Highlights, empty, singleton, addAll, add, jsonEncode, jsonDecode, toList, fromList)
 
-import Date exposing (Date)
+import Date exposing (Date, Month(..))
+import Helpers.Dates as Dates
 import Dict exposing (Dict, get, insert)
 import Json.Encode as Encode
 import Json.Decode as Json
@@ -82,14 +83,33 @@ encodeTuple (k, v) =
 formatDate : Date -> String
 formatDate date =
   let
-    (year, month, day) = (Date.year date, Date.month date, Date.day date)
+    year = toString (Date.year date)
+    month = case Date.month date of
+      Jan -> "01"
+      Feb -> "02"
+      Mar -> "03"
+      Apr -> "04"
+      May -> "05"
+      Jun -> "06"
+      Jul -> "07"
+      Aug -> "08"
+      Sep -> "09"
+      Oct -> "10"
+      Nov -> "11"
+      Dec -> "12"
+    day = toString (Date.day date)
   in
-    [(toString year), (toString month), (toString day)] |> join "-"
+    [year, month, day] |> join "-"
 
 
 parseDate : (String, x) -> (Result String Date, x)
 parseDate (date, x) =
-  (Date.fromString date, x)
+  case Date.fromString date of
+    Ok date ->
+      (Ok (Dates.normalize date), x)
+
+    Err err ->
+      (Err err, x)
 
 
 hasDate : (Result String Date, x) -> Maybe (Date, x)

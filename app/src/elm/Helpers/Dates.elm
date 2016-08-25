@@ -1,4 +1,4 @@
-module Helpers.Dates exposing (Unit(..), today, between, subtract, same, min)
+module Helpers.Dates exposing (Unit(..), today, between, subtract, same, min, normalize)
 
 import Date exposing (Date, toTime, fromTime)
 import Task exposing (Task, andThen)
@@ -48,6 +48,10 @@ min dates =
 
     Nothing ->
       Nothing
+
+normalize : Date -> Date
+normalize date =
+  Date.fromTime (datestamp date)
 
 -- PRIVATE API
 
