@@ -65,7 +65,9 @@ update action model =
       (model, Cmd.none)
 
     Init date ->
-      model ! [ fetchHighlights (Dates.subtract 2 Day date) date, scrollToBottom "highlights" ]
+      { model
+        | highlights = Highlights.empty
+      } ! [ fetchHighlights (Dates.subtract 2 Day date) date, scrollToBottom "highlights" ]
 
     ReceiveHighlights action ->
       case Api.receive action of
