@@ -1,4 +1,4 @@
-module Helpers.Highlights exposing (Highlights, empty, singleton, merge, jsonEncode, jsonDecode, toList, fromList)
+module Helpers.Highlights exposing (Highlights, empty, singleton, addAll, add, jsonEncode, jsonDecode, toList, fromList)
 
 import Date exposing (Date)
 import Dict exposing (Dict, get, insert)
@@ -21,14 +21,21 @@ singleton : Date -> List String -> Highlights
 singleton date highlights =
   Dict.singleton (formatDate date) highlights
 
+
 fromList : List (Date, List String) -> Highlights
 fromList list =
   map (\(date, x) -> (formatDate date, x)) list
     |> Dict.fromList
 
-merge : Highlights -> Highlights -> Highlights
-merge h1 h2 =
-  Dict.foldr addHighlights h1 h2
+
+add : Date -> List String -> Highlights -> Highlights
+add date highlights target =
+  addInternal (formatDate date) highlights target
+
+
+addAll : Highlights -> Highlights -> Highlights
+addAll highlights target =
+  Dict.foldr addInternal target highlights
 
 
 jsonEncode : Highlights -> String
@@ -52,8 +59,8 @@ toList highlights =
 
 -- PRIVATE API
 
-addHighlights : String -> List String -> Highlights -> Highlights
-addHighlights date highlights target =
+addInternal : String -> List String -> Highlights -> Highlights
+addInternal date highlights target =
   let
     newHighlights =
       case get date target of
@@ -93,6 +100,6 @@ hasDate (result, x) =
 
     Err err ->
       let
-        _ = Debug.log "Not a date: " err
+        _ = Debug.log "Not a date" err
       in
         Nothing

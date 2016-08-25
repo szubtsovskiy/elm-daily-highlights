@@ -44,7 +44,6 @@ type alias Model =
   }
 
 
--- TODO next: add highlights on scroll to the model instead of replacing the model
 -- TODO next: add AjaxLoader
 
 -- UPDATE
@@ -71,7 +70,9 @@ update action model =
     ReceiveHighlights action ->
       case Api.receive action of
         Ok highlights ->
-          { model | highlights = highlights } ! [Task.perform (always NoOp) ReceiveToday Dates.today]
+          { model
+            | highlights = Highlights.addAll highlights model.highlights
+          } ! [Task.perform (always NoOp) ReceiveToday Dates.today]
 
         Err err ->
           let
@@ -91,8 +92,7 @@ update action model =
           case model.today of
             Just today ->
               let
-                newHighlights = Highlights.singleton today [model.current]
-                  |> Highlights.merge model.highlights
+                newHighlights = Highlights.add today [model.current] model.highlights
               in
                 { model | current = "", highlights = newHighlights } ! [ saveHighlight model.current today, scrollToBottom "highlights" ]
 

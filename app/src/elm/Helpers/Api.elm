@@ -58,7 +58,7 @@ mergeHighlights highlights =
       newHighlights =
         case maybeHighlights of
           Just storedHighlights ->
-            Highlights.merge storedHighlights highlights
+            Highlights.addAll highlights storedHighlights
 
           Nothing ->
             highlights
