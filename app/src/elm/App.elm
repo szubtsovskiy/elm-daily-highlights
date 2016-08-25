@@ -1,6 +1,7 @@
 module App exposing (main)
 
 import Date exposing (Date, year, month, day, hour, minute, second, millisecond, toTime)
+import Dom
 import Dom.Scroll
 import Helpers.Api as Api
 import Helpers.Dates as Dates exposing (Unit(..))
@@ -56,6 +57,7 @@ type Action
   | SetCurrent String
   | KeyDown Int
   | Scroll Int
+  | DomError Dom.Error
 
 update : Action -> Model -> (Model, Cmd Action)
 update action model =
@@ -73,7 +75,7 @@ update action model =
 
         Err err ->
           let
-            _ = Debug.log "Error: " err
+            _ = Debug.log "Error receiving highlights" err
           in
             (model, Cmd.none)
 
@@ -122,6 +124,12 @@ update action model =
       else
         (model, Cmd.none)
 
+    DomError err ->
+      let
+        _ = Debug.log "DOM error" (toString err)
+      in
+        (model, Cmd.none)
+
 
 saveHighlight : String -> Date -> Cmd Action
 saveHighlight highlight date =
@@ -133,11 +141,11 @@ fetchHighlights from to =
 
 scrollToBottom : String -> Cmd Action
 scrollToBottom id =
-  Task.perform (always NoOp) (always NoOp) (Dom.Scroll.toBottom id)
+  Task.perform DomError (always NoOp) (Dom.Scroll.toBottom id)
 
 scrollToY : String -> Float -> Cmd Action
 scrollToY id px =
-  Task.perform (always NoOp) (always NoOp) (Dom.Scroll.toY id px)
+  Task.perform DomError (always NoOp) (Dom.Scroll.toY id px)
 
 -- VIEW
 
