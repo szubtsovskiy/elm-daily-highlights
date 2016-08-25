@@ -1,5 +1,6 @@
 module App exposing (main)
 
+import AjaxLoader
 import Date exposing (Date, year, month, day, hour, minute, second, millisecond, toTime)
 import Dom
 import Dom.Scroll
@@ -40,11 +41,10 @@ type alias Model =
   { highlights : Highlights
   , current : String
   , today : Maybe Date
+  , loader : AjaxLoader.Model
   , styles : Styles
   }
 
-
--- TODO next: add AjaxLoader
 
 -- UPDATE
 
@@ -58,6 +58,7 @@ type Action
   | Scroll Int
   | DomError Dom.Error
 
+
 update : Action -> Model -> (Model, Cmd Action)
 update action model =
   case action of
@@ -67,6 +68,7 @@ update action model =
     Init date ->
       { model
         | highlights = Highlights.empty
+        , loader = AjaxLoader.show model.loader
       } ! [ fetchHighlights (Dates.subtract 2 Day date) date, scrollToBottom "highlights" ]
 
     ReceiveHighlights action ->
@@ -74,13 +76,14 @@ update action model =
         Ok highlights ->
           { model
             | highlights = Highlights.addAll highlights model.highlights
+            , loader = AjaxLoader.hide model.loader
           } ! [Task.perform (always NoOp) ReceiveToday Dates.today]
 
         Err err ->
           let
             _ = Debug.log "Error receiving highlights" err
           in
-            (model, Cmd.none)
+            ({model | loader = AjaxLoader.hide model.loader}, Cmd.none)
 
     ReceiveToday date ->
       ({model | today = Just date}, Cmd.none)
@@ -114,12 +117,16 @@ update action model =
         in
           case minDate of
             Just date ->
-              model ! [ fetchHighlights (Dates.subtract 1 Day date) date, scrollToY "highlights" 40 ]
+              { model
+                | loader = AjaxLoader.show model.loader
+              } ! [ fetchHighlights (Dates.subtract 1 Day date) date, scrollToY "highlights" 40 ]
 
             Nothing ->
               case model.today of
                 Just date ->
-                  model ! [ fetchHighlights (Dates.subtract 1 Day date) date, scrollToY "highlights" 40 ]
+                  { model
+                    | loader = AjaxLoader.show model.loader
+                  } ! [ fetchHighlights (Dates.subtract 1 Day date) date, scrollToY "highlights" 40 ]
 
                 Nothing ->
                   (model, Cmd.none)
@@ -156,10 +163,11 @@ view model =
   let
     highlights = Highlights.toList model.highlights |> List.sortBy (\(date, _) -> toTime date)
     sections = map (section model.today) highlights
+    loader = Html.map (always NoOp) (AjaxLoader.view model.loader)
     styles = model.styles
   in
     div [ ]
-    [ div [ id "highlights", class styles.container, onScroll Scroll ] sections
+    [ div [ id "highlights", class styles.container, onScroll Scroll ] ([loader] ++ sections)
     , input
       [ type' "text"
       , class styles.input
@@ -254,6 +262,7 @@ init styles =
   { highlights = Highlights.empty
   , current = ""
   , today = Nothing
+  , loader = AjaxLoader.init True (AjaxLoader.Styles styles.loaderIconContainer styles.loaderIcon)
   , styles = styles
   } ! [Task.perform (always NoOp) Init Dates.today]
 
