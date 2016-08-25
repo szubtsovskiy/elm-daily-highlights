@@ -43,7 +43,9 @@ type alias Model =
   }
 
 
--- TODO next: add infinite scroll backwards
+-- TODO next: scroll down a little after loading new highlights
+-- TODO next: add highlights on scroll to the model instead of replacing the model
+-- TODO next: add AjaxLoader
 
 -- UPDATE
 
@@ -54,6 +56,7 @@ type Action
   | ReceiveToday Date
   | SetCurrent String
   | KeyDown Int
+  | Scroll Int
 
 update : Action -> Model -> (Model, Cmd Action)
 update action model =
@@ -101,6 +104,25 @@ update action model =
         _ ->
           (model, Cmd.none)
 
+    Scroll pxFromTop ->
+      if pxFromTop == 0 then
+        let
+          minDate = Dates.min (List.map (\(date, _) -> date) (Highlights.toList model.highlights))
+        in
+          case minDate of
+            Just date ->
+              model ! [ fetchHighlights (Dates.subtract 1 Day date) date ]
+
+            Nothing ->
+              case model.today of
+                Just date ->
+                  model ! [ fetchHighlights (Dates.subtract 1 Day date) date ]
+
+                Nothing ->
+                  (model, Cmd.none)
+      else
+        (model, Cmd.none)
+
 
 saveHighlight : String -> Date -> Cmd Action
 saveHighlight highlight date =
@@ -125,8 +147,15 @@ view model =
     styles = model.styles
   in
     div [ ]
-    [ div [ id "highlights", class styles.container ] sections
-    , input [ type' "text", class styles.input, placeholder "Highlight", onInput SetCurrent, onKeyDown KeyDown, value model.current ] []
+    [ div [ id "highlights", class styles.container, onScroll Scroll ] sections
+    , input
+      [ type' "text"
+      , class styles.input
+      , placeholder "Highlight"
+      , onInput SetCurrent
+      , onKeyDown KeyDown
+      , value model.current
+      ] []
     ]
 
 
@@ -194,17 +223,17 @@ formatDate date =
   in
     [y, m, d] |> join "-"
 
---onScroll : (Int -> action) -> Attribute action
---onScroll tagger =
---  on "scroll" (JsonD.map tagger scrollTop)
+onScroll : (Int -> action) -> Attribute action
+onScroll tagger =
+  on "scroll" (Json.map tagger scrollTop)
 
 onKeyDown : (Int -> action) -> Attribute action
 onKeyDown tagger =
   on "keydown" (Json.map tagger keyCode)
 
---scrollTop : JsonD.Decoder Int
---scrollTop =
---  JsonD.at [ "target", "scrollTop" ] JsonD.int
+scrollTop : Json.Decoder Int
+scrollTop =
+  Json.at [ "target", "scrollTop" ] Json.int
 
 -- INIT
 

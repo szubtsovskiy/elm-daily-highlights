@@ -1,4 +1,4 @@
-module Helpers.Dates exposing (Unit(..), today, between, subtract, same)
+module Helpers.Dates exposing (Unit(..), today, between, subtract, same, min)
 
 import Date exposing (Date, toTime, fromTime)
 import Task exposing (Task, andThen)
@@ -39,6 +39,15 @@ same : Date -> Date -> Bool
 same a b =
   (datestamp a) - (datestamp b) == 0
 
+
+min : List Date -> Maybe Date
+min dates =
+  case List.minimum (List.map datestamp dates) of
+    Just ms ->
+      Just (fromTime ms)
+
+    Nothing ->
+      Nothing
 
 -- PRIVATE API
 
